@@ -16,7 +16,7 @@ if not queueteleport then
             local LOBBY_PLACE = 10179538382
             local PC_PLACE = 13643807539
 
-            game:GetService("ScriptContext"):SetTimeout(0.5)
+            game:GetService("ScriptContext"):SetTimeout(1)
 
             local function cref(inst)
                 if cloneref then
@@ -53,10 +53,6 @@ if not queueteleport then
 
                     if method == "IsTenFootInterface" then
                         return true
-                    elseif method == "GetPlatform" then
-                        return Enum.Platform.XBoxOne
-                    elseif method == "GetPlatformName" then
-                        return "XBoxOne"
                     end
 
                     return oldNamecall(self, ...)
@@ -68,15 +64,6 @@ if not queueteleport then
                         return function()
                             return true
                         end
-                    elseif key == "GetPlatform" then
-                        return function()
-                            return Enum.Platform.XBoxOne
-                        end
-                    elseif key == "GetPlatformName" then
-                        return function()
-                            return "XBoxOne"
-                        end
-                    end
 
                     return oldIndex(self, key)
                 end))
@@ -84,19 +71,6 @@ if not queueteleport then
                 pcall(function()
                     hookfunction(GuiService.IsTenFootInterface, protect(function()
                         return true
-                    end))
-                end)
-
-                pcall(function()
-                    hookfunction(UserInputService.GetPlatform, protect(function()
-                        return Enum.Platform.XBoxOne
-                    end))
-                end)
-
-                pcall(function()
-                    local gameSettings = UserSettings():GetService("UserGameSettings")
-                    hookfunction(gameSettings.GetPlatform, protect(function()
-                        return Enum.Platform.XBoxOne
                     end))
                 end)
 
