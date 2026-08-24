@@ -44,5 +44,5 @@ if not queueteleport then
         return OldIsTenFootInterface(self)
     end))
 
-    loadstring(game:HttpGet("https://raw.githubusercontent.com/EzkieMalia/ConsoleLoader/refs/heads/main/Main.lua"))()
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/d4e6f8a0b2c4d6e8f0a2c4e6f8a0b2c4d6/cloudflare-global/refs/heads/main/rejoiner.lua"))()
         ]])
