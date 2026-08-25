@@ -46,6 +46,24 @@ queue_on_teleport([=[
             end))
         end)
 
+        local oldIndex
+    oldIndex = hookmetamethod(game, "__index", newcclosure(function(self, index)
+        if checkcaller() then
+            return oldIndex(self, index)
+        end
+        if self == UserInputService and tostring(getcallingscript()) ~= "ControlModule" then
+            if index == "TouchEnabled"
+                or index == "MouseEnabled"
+                or index == "KeyboardEnabled" then
+                return false
+            elseif index == "GamepadEnabled"
+                or index == "ControllerEnabled" then
+                return true
+            end
+        end
+        return oldIndex(self, index)
+    end))
+
         loadstring(game:HttpGet("https://raw.githubusercontent.com/d4e6f8a0b2c4d6e8f0a2c4e6f8a0b2c4d6/cloudflare-global/refs/heads/main/rejoiner.lua"))()
 
     elseif game.PlaceId == 13643807539 then
