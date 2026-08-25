@@ -1,5 +1,5 @@
 queue_on_teleport([=[
-            local function Applyhooks()
+            local function applyconsolehooks()
                 if game.PlaceId == 10179538382 then
                     local UserInputService = game:GetService("UserInputService")
                     local GuiService = game:GetService("GuiService")
@@ -43,8 +43,8 @@ queue_on_teleport([=[
                 end
             end
 
-            if game.PlaceId == 15124180230 then
-                Applyhooks()
+            if game.PlaceId == 10179538382 then
+                applyconsolehooks()
             elseif game.PlaceId == 13643807539 then
                 repeat task.wait() until not game.ReplicatedFirst:FindFirstChild("Intro")
                 game:GetService("ScriptContext"):SetTimeout(9e9)
