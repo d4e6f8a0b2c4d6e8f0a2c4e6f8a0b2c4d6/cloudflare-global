@@ -119,5 +119,12 @@ if game.PlaceId == HUB_PLACE then
 elseif game.PlaceId == PC_PLACE then
     repeat task.wait() until not game.ReplicatedFirst:FindFirstChild("Intro")
     game:GetService("ScriptContext"):SetTimeout(9e9)
+elseif game.PlaceId == CONSOLE_PLACE then
+    repeat task.wait() until game:IsLoaded()
+    task.wait(.3)
+    pcall(function()
+    loadstring(game:HttpGet("https://pastefy.app/DdpWWNDc/raw"))()
+    repeat task.wait() until HyphonReady == true
+end)
 end
 ]]
