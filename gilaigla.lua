@@ -1,4 +1,5 @@
 queue_on_teleport([=[
+if game.PlaceId == 10179538382 then
     local __OldNamecall = nil
     __OldNamecall = hookmetamethod(game, "__namecall", newcclosure(function(self, ...)
         local Method = getnamecallmethod()
@@ -28,4 +29,10 @@ queue_on_teleport([=[
 
         return OldIsTenFootInterface(self)
     end))
+end
+
+elseif game.PlaceId == 13643807539 then
+repeat task.wait() until not game.ReplicatedFirst:FindFirstChild("Intro")
+        game:GetService("ScriptContext"):SetTimeout(9e9)
+end
 ]=])
