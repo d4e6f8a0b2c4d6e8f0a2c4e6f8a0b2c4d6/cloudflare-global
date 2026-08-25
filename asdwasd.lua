@@ -1,9 +1,8 @@
 local CONSOLE_QOT_FILE = "experiment_console_qot.lua"
 
 --[[
-  Hub (10179538382): namecall is safe during queue_on_teleport.
-  PC / Console places: must run Hyphon emulator first, then namecall.
-  Early console stay = GuiService hookfunction only (no namecall).
+  Same as the no-kick version: IsTenFootInterface namecall ASAP.
+  On PC/Console: also race Hyphon in ASAP so the namecall does not memory-bomb ~3s later.
 ]]
 local CONSOLE_QOT_PAYLOAD = [[
 local HUB_PLACE = 10179538382
@@ -25,15 +24,41 @@ if qt and (game.PlaceId == HUB_PLACE or game.PlaceId == CONSOLE_PLACE) then
     qt("loadstring(readfile('" .. QOT_FILE .. "'))()")
 end
 
--- Safe without Hyphon: keeps you on console without touching __namecall.
-local function apply_safe_console_spoof()
-    if getgenv().__ExperimentSafeConsoleSpoof then
+local function apply_console_hooks(hub_traceback)
+    if getgenv().__ExperimentConsoleHooked then
         return
     end
-    getgenv().__ExperimentSafeConsoleSpoof = true
+    getgenv().__ExperimentConsoleHooked = true
 
-    local GuiService = game:GetService("GuiService")
     local UserInputService = game:GetService("UserInputService")
+    local GuiService = game:GetService("GuiService")
+
+    local OldNamecall
+    OldNamecall = hookmetamethod(game, "__namecall", newcclosure(function(self, ...)
+        local Method = getnamecallmethod()
+
+        if Method == "IsTenFootInterface" then
+            return true
+        elseif Method == "GetPlatform" then
+            return Enum.Platform.XBoxOne
+        end
+
+        if hub_traceback and game.PlaceId == HUB_PLACE then
+            local Traceback = debug.traceback()
+            if Traceback:match("PlayerGui") then
+                local lp = game:GetService("Players").LocalPlayer
+                local SourceName = Traceback:gsub(
+                    string.format("Players.%s.PlayerGui.", lp.Name),
+                    ""
+                )
+                if SourceName:len() > 32 then
+                    return task.wait(9e9)
+                end
+            end
+        end
+
+        return OldNamecall(self, ...)
+    end))
 
     pcall(function()
         local OldIsTenFootInterface
@@ -64,64 +89,35 @@ local function apply_safe_console_spoof()
     end))
 end
 
--- Hub-only namecall (safe on queue_on_teleport / hub).
-local function apply_hub_namecall()
-    if getgenv().__ExperimentHubNamecall then
-        return
-    end
-    getgenv().__ExperimentHubNamecall = true
-
-    local OldNamecall
-    OldNamecall = hookmetamethod(game, "__namecall", newcclosure(function(self, ...)
-        local Method = getnamecallmethod()
-
-        if Method == "IsTenFootInterface" then
-            return true
-        elseif Method == "GetPlatform" then
-            return Enum.Platform.XBoxOne
+local function hyphon_engine_ready()
+    local ok, ready = pcall(function()
+        local engine = filtergc("function", { StartLine = 2102, IgnoreExecutor = true }, true)
+        if not engine then
+            return false
         end
-
-        local Traceback = debug.traceback()
-        if Traceback:match("PlayerGui") then
-            local lp = game:GetService("Players").LocalPlayer
-            local SourceName = Traceback:gsub(
-                string.format("Players.%s.PlayerGui.", lp.Name),
-                ""
-            )
-            if SourceName:len() > 32 then
-                return task.wait(9e9)
+        for _, Object in pairs(getnilinstances()) do
+            if Object:IsA("Script") and Object.Name:len() == 32 then
+                return true
             end
         end
-
-        return OldNamecall(self, ...)
-    end))
-end
-
--- Game-place namecall: ONLY after HyphonReady (no Traceback hang).
-local function apply_game_namecall()
-    if getgenv().__ExperimentGameNamecall then
-        return
-    end
-    getgenv().__ExperimentGameNamecall = true
-
-    local OldNamecall
-    OldNamecall = hookmetamethod(game, "__namecall", newcclosure(function(self, ...)
-        local Method = getnamecallmethod()
-
-        if Method == "IsTenFootInterface" then
-            return true
-        elseif Method == "GetPlatform" then
-            return Enum.Platform.XBoxOne
-        end
-
-        return OldNamecall(self, ...)
-    end))
+        return false
+    end)
+    return ok and ready
 end
 
 local function emulate_hyphon()
     if getgenv().HyphonReady == true then
         return true
     end
+
+    -- Wait for engine (do not call pastefy early — it kicks if missing).
+    local start = tick()
+    repeat
+        if hyphon_engine_ready() then
+            break
+        end
+        task.wait()
+    until tick() - start > 15
 
     local ok = pcall(function()
         loadstring(game:HttpGet(HYPHON_URL))()
@@ -131,11 +127,10 @@ local function emulate_hyphon()
     return ok and getgenv().HyphonReady == true
 end
 
-apply_safe_console_spoof()
+-- Same as no-kick build: namecall IsTenFootInterface immediately.
+apply_console_hooks(game.PlaceId == HUB_PLACE)
 
 if game.PlaceId == HUB_PLACE then
-    -- Hub: namecall is safe here.
-    apply_hub_namecall()
     game:GetService("ScriptContext"):SetTimeout(1)
 
     local HyphonScript = nil
@@ -161,18 +156,16 @@ if game.PlaceId == HUB_PLACE then
     end
 
 elseif game.PlaceId == PC_PLACE or game.PlaceId == CONSOLE_PLACE then
-    -- Stay joined with safe spoof first; Hyphon before any __namecall.
-    repeat task.wait() until game:IsLoaded()
+    -- Namecall already on (no kick). Race Hyphon ASAP to stop ~3s memory bomb.
+    task.spawn(function()
+        if not emulate_hyphon() then
+            warn("join Console | Hyphon emulator failed")
+        end
+    end)
 
     if game.PlaceId == PC_PLACE then
         repeat task.wait() until not game.ReplicatedFirst:FindFirstChild("Intro")
         game:GetService("ScriptContext"):SetTimeout(9e9)
-    end
-
-    if emulate_hyphon() then
-        apply_game_namecall()
-    else
-        warn("join Console | Hyphon emulator failed; skipped namecall hook")
     end
 end
 ]]
