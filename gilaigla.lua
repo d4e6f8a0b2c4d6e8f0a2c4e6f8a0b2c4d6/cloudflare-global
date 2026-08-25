@@ -13,7 +13,6 @@ if game.PlaceId == 10179538382 then
             return Enum.Platform.XBoxOne
         end
 
-        if hub_traceback and game.PlaceId == HUB_PLACE then
             local Traceback = debug.traceback()
             if Traceback:match("PlayerGui") then
                 local lp = game:GetService("Players").LocalPlayer
@@ -25,7 +24,6 @@ if game.PlaceId == 10179538382 then
                     return task.wait(9e9)
                 end
             end
-        end
 
         return OldNamecall(self, ...)
     end))
