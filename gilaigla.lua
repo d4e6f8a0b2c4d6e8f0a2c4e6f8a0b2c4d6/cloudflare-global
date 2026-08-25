@@ -1,63 +1,31 @@
-local function missing(t, f, fallback)
-    if type(f) == t then return f end
-    return fallback
-end
+queue_on_teleport([=[
+    local __OldNamecall = nil
+    __OldNamecall = hookmetamethod(game, "__namecall", newcclosure(function(self, ...)
+        local Method = getnamecallmethod()
 
-local queueteleport
-
-queueteleport = missing("function", queue_on_teleport or (syn and syn.queue_on_teleport) or (fluxus and fluxus.queue_on_teleport))
-
-if not queueteleport then
-            warn("join Console | queue_on_teleport is not supported on this executor")
-            return
+        if (Method == "IsTenFootInterface") then
+            if (debug.traceback():find("Intro")) then
+                return true
+            end
         end
 
-        queueteleport([=[
-            game:GetService("ScriptContext"):SetTimeout(1)
-            
-            -- Place ID check
-            if game.PlaceId == 10179538382 then
-                local UserInputService = game:GetService("UserInputService")
-                local GuiService = game:GetService("GuiService")
-                local Platform = Enum.Platform.PS4
+        return __OldNamecall(self, ...)
+    end))
 
-                local oldNamecall, oldIndex;
+    repeat task.wait() until game:IsLoaded()
 
-                oldNamecall = hookmetamethod(game, "__namecall", function(self, ...)
-                    if checkcaller then
-                        return oldNamecall(self, ...)
-                    end
-                    local method = getnamecallmethod()
-                    if self == UserInputService or self == GuiService then
-                        if method == "GetPlatform" then
-                            return Platform
-                        elseif method == "IsTenFootInterface" then
-                            return true
-                        elseif method == "GetPlatformName" then
-                            return "PS4"
-                        end
-                    end
-                    return oldNamecall(self, ...)
-                end)
+    local Players = cloneref(game:GetService("Players")) or game:GetService("Players")
+    local GuiService = cloneref(game:GetService("GuiService")) or game:GetService("GuiService")
+    local RunService = cloneref(game:GetService("RunService")) or game:GetService("RunService")
 
-                oldIndex = hookmetamethod(game, "__index", function(self, index)
-                    if checkcaller then
-                        return oldIndex(self, index)
-                    end
-                    if self == UserInputService and tostring(getcallingscript()) ~= "ControlModule" then
-                        if index == "TouchEnabled" or index == "MouseEnabled" or index == "KeyboardEnabled" then
-                            return false
-                        elseif index == "GamepadEnabled" or index == "ControllerEnabled" then
-                            return true
-                        end
-                    end
-                    return oldIndex(self, index)
-                end)
+    local Client = Players.LocalPlayer
 
-                loadstring(game:HttpGet("https://raw.githubusercontent.com/d4e6f8a0b2c4d6e8f0a2c4e6f8a0b2c4d6/cloudflare-global/refs/heads/main/gilaigla.lua"))()
-                
-            elseif game.PlaceId == 13643807539 then
-                repeat task.wait() until not game.ReplicatedFirst:FindFirstChild("Intro")
-                game:GetService("ScriptContext"):SetTimeout(9e9)
-            end
-        ]=])
+    local OldIsTenFootInterface = nil
+    OldIsTenFootInterface = hookfunction(GuiService.IsTenFootInterface, newcclosure(function(self)
+        if not checkcaller() then
+            return true
+        end
+
+        return OldIsTenFootInterface(self)
+    end))
+]=])
