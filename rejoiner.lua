@@ -1,6 +1,8 @@
 queue_on_teleport([=[
     local UserInputService = game:GetService("UserInputService")
     local GuiService = game:GetService("GuiService")
+    local Players = game:GetService("Players")
+    local LocalPlayer = Players.LocalPlayer
     game:GetService("ScriptContext"):SetTimeout(1)
 
     if game.PlaceId == 10179538382 then
