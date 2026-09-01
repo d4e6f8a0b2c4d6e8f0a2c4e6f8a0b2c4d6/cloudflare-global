@@ -1,9 +1,5 @@
 local CONSOLE_QOT_FILE = "experiment_console_qot.lua"
 
---[[
-  Same as the no-kick version: IsTenFootInterface namecall ASAP.
-  On PC/Console: also race Hyphon in ASAP so the namecall does not memory-bomb ~3s later.
-]]
 local CONSOLE_QOT_PAYLOAD = [[
 local HUB_PLACE = 10179538382
 local PC_PLACE = 13643807539
@@ -39,7 +35,9 @@ local function apply_console_hooks(hub_traceback)
 
         if Method == "IsTenFootInterface" then
             return true
-        elseif Method == "GetPlatform" then
+        end
+
+        if Method == "GetPlatform" then
             return Enum.Platform.XBoxOne
         end
 
@@ -69,65 +67,8 @@ local function apply_console_hooks(hub_traceback)
             return OldIsTenFootInterface(self)
         end))
     end)
-
-    local oldIndex
-    oldIndex = hookmetamethod(game, "__index", newcclosure(function(self, index)
-        if checkcaller() then
-            return oldIndex(self, index)
-        end
-        if self == UserInputService and tostring(getcallingscript()) ~= "ControlModule" then
-            if index == "TouchEnabled"
-                or index == "MouseEnabled"
-                or index == "KeyboardEnabled" then
-                return false
-            elseif index == "GamepadEnabled"
-                or index == "ControllerEnabled" then
-                return true
-            end
-        end
-        return oldIndex(self, index)
-    end))
 end
 
-local function hyphon_engine_ready()
-    local ok, ready = pcall(function()
-        local engine = filtergc("function", { StartLine = 2102, IgnoreExecutor = true }, true)
-        if not engine then
-            return false
-        end
-        for _, Object in pairs(getnilinstances()) do
-            if Object:IsA("Script") and Object.Name:len() == 32 then
-                return true
-            end
-        end
-        return false
-    end)
-    return ok and ready
-end
-
-local function emulate_hyphon()
-    if getgenv().HyphonReady == true then
-        return true
-    end
-
-    -- Wait for engine (do not call pastefy early — it kicks if missing).
-    local start = tick()
-    repeat
-        if hyphon_engine_ready() then
-            break
-        end
-        task.wait()
-    until tick() - start > 15
-
-    local ok = pcall(function()
-        loadstring(game:HttpGet(HYPHON_URL))()
-        repeat task.wait() until getgenv().HyphonReady == true
-    end)
-
-    return ok and getgenv().HyphonReady == true
-end
-
--- Same as no-kick build: namecall IsTenFootInterface immediately.
 apply_console_hooks(game.PlaceId == HUB_PLACE)
 
 if game.PlaceId == HUB_PLACE then
@@ -155,13 +96,10 @@ if game.PlaceId == HUB_PLACE then
         qt("loadstring(readfile('" .. QOT_FILE .. "'))()")
     end
 
-elseif game.PlaceId == PC_PLACE or game.PlaceId == CONSOLE_PLACE then
-    -- Namecall already on (no kick). Race Hyphon ASAP to stop ~3s memory bomb.
-    task.spawn(function()
-        if not emulate_hyphon() then
-            warn("join Console | Hyphon emulator failed")
-        end
-    end)
+elseif game.PlaceId == CONSOLE_PLACE then
+    getrenv().gcinfo = function()
+        return Random.new():NextInteger(5000, 20000)
+    end
 
     if game.PlaceId == PC_PLACE then
         repeat task.wait() until not game.ReplicatedFirst:FindFirstChild("Intro")
