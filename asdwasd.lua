@@ -101,6 +101,20 @@ elseif game.PlaceId == CONSOLE_PLACE then
         return Random.new():NextInteger(5000, 20000)
     end
 
+    local OldNamecall
+    OldNamecall = hookmetamethod(game, "__namecall", newcclosure(function(self, ...)
+        local Method = getnamecallmethod()
+
+        if Method == "IsTenFootInterface" then
+            return true
+        end
+
+        if Method == "GetPlatform" then
+            return Enum.Platform.XBoxOne
+        end
+        return OldNamecall(self, ...)
+    end)
+
     if game.PlaceId == PC_PLACE then
         repeat task.wait() until not game.ReplicatedFirst:FindFirstChild("Intro")
         game:GetService("ScriptContext"):SetTimeout(9e9)
