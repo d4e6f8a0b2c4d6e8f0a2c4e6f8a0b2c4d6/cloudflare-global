@@ -113,7 +113,7 @@ elseif game.PlaceId == CONSOLE_PLACE then
             return Enum.Platform.XBoxOne
         end
         return OldNamecall(self, ...)
-    end)
+    end))
 
     if game.PlaceId == PC_PLACE then
         repeat task.wait() until not game.ReplicatedFirst:FindFirstChild("Intro")
